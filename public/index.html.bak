@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Werewolf - Lobby</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width:900px; margin:24px auto; padding:12px; }
+    .row { display:flex; gap:12px; }
+    .card { border:1px solid #ddd; padding:12px; border-radius:8px; }
+  </style>
+</head>
+<body>
+  <h1>Werewolf — Lobby</h1>
+
+  <div id="auth">
+    <p>Login (Google):</p>
+    <!-- Google Identity button (you must set GOOGLE_CLIENT_ID in .env and paste into client_id below) -->
+    <div id="g_id_onload"
+      data-client_id="REPLACE_WITH_GOOGLE_CLIENT_ID"
+      data-callback="handleCredentialResponse">
+    </div>
+    <div class="g_id_signin" data-type="standard"></div>
+
+    <p>Or paste your email & name (quick dev mode)</p>
+    <input id="dev_email" placeholder="email" />
+    <input id="dev_name" placeholder="name" />
+    <button id="dev_login">Dev Login</button>
+  </div>
+
+  <div id="me" style="display:none;">
+    <p>Signed in as <span id="me_name"></span> (<span id="me_email"></span>)</p>
+    <button id="create_room">Create Room</button>
+    <button id="refresh_rooms">Refresh Rooms</button>
+    <div id="rooms"></div>
+  </div>
+
+  <script>
+    const socket = io();
+    let me = null;
+
+    async function postJson(path, body) {
+      const res = await fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      return res.json();
+    }
+
+    document.getElementById('dev_login').onclick = async () => {
+      const email = document.getElementById('dev_email').value;
+      const name = document.getElementById('dev_name').value || email.split('@')[0];
+      if(!email) return alert('enter email');
+      const r = await postJson('/api/auth/google', { email, name, picture: null });
+      me = r.user; onSignedIn();
+    }
+
+    function onSignedIn(){
+      document.getElementById('auth').style.display='none';
+      document.getElementById('me').style.display='block';
+      document.getElementById('me_name').textContent = me.name;
+      document.getElementById('me_email').textContent = me.email;
+
+      socket.emit('auth', { userId: me.id }, (resp) => {
+        if (resp?.ok) console.log('socket auth ok');
+      });
+
+      loadRooms();
+    }
+
+    async function loadRooms(){
+      const res = await fetch('/api/rooms');
+      const j = await res.json();
+      const container = document.getElementById('rooms');
+      container.innerHTML='';
+      (j.rooms||[]).forEach(r=>{
+        const el = document.createElement('div'); el.className='card';
+        el.innerHTML = `<strong>${r.code}</strong> — ${r.owner} — ${r.players} players — ${r.status} <button data-code="${r.code}">Join</button>`;
+        el.querySelector('button').onclick = () => joinRoom(r.code);
+        container.appendChild(el);
+      });
+    }
+
+    document.getElementById('create_room').onclick = async () => {
+      const r = await postJson('/api/room/create', { userId: me.id, roomName: me.name + "'s room" });
+      if (r.room) {
+        openRoomUI(r.room.code);
+      } else alert(JSON.stringify(r));
+    }
+
+    function joinRoom(code){
+      socket.emit('room:join', { code }, (resp) => {
+        if (resp?.ok) openRoomUI(code);
+        else alert(JSON.stringify(resp));
+      });
+    }
+
+    function openRoomUI(code){
+      const w = window.open('/room.html?code='+code, '_blank');
+    }
+
+    document.getElementById('refresh_rooms').onclick = loadRooms;
+
+    // Google identity callback (if you added client id)
+    window.handleCredentialResponse = async (resp) => {
+      // For simplicity we won't verify JWT here — just decode basic parts optionally
+      // In production verify at server using Google tokeninfo
+      try {
+        // decoder omitted; instead ask user to use dev quick login or paste client id
+        alert('Google Sign-In activated, but this demo requires you to paste GOOGLE_CLIENT_ID into public/index.html or use Dev Login.');
+      } catch(e){ console.error(e); }
+    }
+  </script>
+</body>
+</html>
