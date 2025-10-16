@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🐺 Werewolf Room</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 350px;
+      gap: 20px;
+    }
+    
+    @media (max-width: 968px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      animation: fadeIn 0.6s ease;
+    }
+    
+    .room-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .room-code {
+      font-size: 2em;
+      font-weight: bold;
+    }
+    
+    .room-status {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .status-badge {
+      padding: 5px 15px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.2);
+      font-size: 0.9em;
+    }
+    
+    .players-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .player-card {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      padding: 15px;
+      border-radius: 15px;
+      transition: all 0.3s;
+      position: relative;
+    }
+    
+    .player-card.ready {
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      border: 2px solid #4CAF50;
+    }
+    
+    .player-card.dead {
+      opacity: 0.5;
+      background: #e0e0e0;
+    }
+    
+    .player-number {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.1);
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    
+    .player-name {
+      font-size: 1.1em;
+      font-weight: 600;
+      margin-bottom: 10px;
+      padding-right: 40px;
+    }
+    
+    .player-actions {
+      display: flex;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    
+    .btn {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      flex: 1;
+    }
+    
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+    }
+    
+    .btn-danger {
+      background: #f44336;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #da190b;
+    }
+    
+    .btn-success {
+      background: #4CAF50;
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #45a049;
+    }
+    
+    .btn-secondary {
+      background: #e0e0e0;
+      color: #333;
+    }
+    
+    .btn-secondary:hover {
+      background: #d0d0d0;
+    }
+    
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 40px);
+    }
+    
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 15px;
+      margin-bottom: 15px;
+      max-height: 500px;
+    }
+    
+    .message {
+      padding: 10px 15px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      background: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      animation: slideIn 0.3s ease;
+    }
+    
+    .message.system {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      font-style: italic;
+    }
+    
+    .message-user {
+      font-weight: 600;
+      color: #667eea;
+      margin-bottom: 5px;
+    }
+    
+    .message-text {
+      color: #333;
+    }
+    
+    .message-time {
+      font-size: 0.8em;
+      color: #999;
+      margin-top: 5px;
+    }
+    
+    .chat-input {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .chat-input input {
+      flex: 1;
+      padding: 12px 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+    
+    .chat-input input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .game-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .info-box {
+      padding: 15px;
+      background: #e3f2fd;
+      border-left: 4px solid #2196F3;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+    }
+    
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .role-card {
+      background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 15px;
+      margin-top: 20px;
+      text-align: center;
+    }
+    
+    .role-card h3 {
+      font-size: 1.8em;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div>
+      <div class="card">
+        <div class="room-header">
+          <div>
+            <div class="room-code">🎮 <span id="roomCode">Loading...</span></div>
+            <div style="font-size: 0.9em; opacity: 0.9; margin-top: 5px;">Werewolf Game Room</div>
+          </div>
+          <div class="room-status">
+            <div class="status-badge" id="statusBadge">Waiting</div>
+            <div class="status-badge" id="phaseBadge">-</div>
+          </div>
+        </div>
+        
+        <div class="info-box" id="infoBox">
+          <strong>ℹ️ Waiting for players...</strong><br>
+          Click "Ready" when you're ready to start the game. Minimum 3 players required.
+        </div>
+        
+        <div id="roleCard" style="display: none;"></div>
+        
+        <div class="game-controls">
+          <button class="btn btn-success" id="readyBtn" onclick="toggleReady()">✓ Ready</button>
+          <button class="btn btn-secondary" onclick="copyRoomCode()">📋 Copy Code</button>
+          <button class="btn btn-secondary" onclick="window.location.href='/'">🏠 Lobby</button>
+        </div>
+        
+        <h2 style="margin-top: 30px; margin-bottom: 15px;">👥 Players</h2>
+        <div id="playersContainer" class="players-grid">
+          <div class="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 15px;">Loading players...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card chat-container">
+      <h2 style="margin-bottom: 15px;">💬 Chat</h2>
+      <div class="chat-messages" id="chatMessages">
+        <div class="message system">
+          <div class="message-text">Welcome to the game! Chat with other players here.</div>
+        </div>
+      </div>
+      <div class="chat-input">
+        <input type="text" id="messageInput" placeholder="Type a message..." onkeypress="handleKeyPress(event)" />
+        <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomCode = urlParams.get('code');
+    let currentUser = null;
+    let lastChatTimestamp = null;
+    let isReady = false;
+    
+    document.getElementById('roomCode').textContent = roomCode || 'Unknown';
+
+    // Get user from localStorage
+    function getUser() {
+      const saved = localStorage.getItem('ww_user');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          return null;
+        }
+      }
+      return null;
+    }
+
+    // Initialize user
+    async function initUser() {
+      currentUser = getUser();
+      
+      if (!currentUser) {
+        const email = prompt('Enter your email to join the room:');
+        if (!email) {
+          alert('Email is required to join the room');
+          window.location.href = '/';
+          return;
+        }
+        
+        try {
+          const response = await fetch('/api/auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              email, 
+              name: email.split('@')[0] 
+            })
+          });
+          
+          const data = await response.json();
+          if (data.user) {
+            currentUser = data.user;
+            localStorage.setItem('ww_user', JSON.stringify(currentUser));
+          } else {
+            alert('Authentication failed');
+            window.location.href = '/';
+            return;
+          }
+        } catch (error) {
+          console.error('Auth error:', error);
+          alert('Failed to authenticate');
+          window.location.href = '/';
+          return;
+        }
+      }
+      
+      // Join room
+      await joinRoom();
+    }
+
+    // Join room
+    async function joinRoom() {
+      try {
+        const response = await fetch('/api/rooms/join', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user: currentUser, code: roomCode })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.ok) {
+          alert(data.error || 'Failed to join room');
+          window.location.href = '/';
+        }
+      } catch (error) {
+        console.error('Join room error:', error);
+        alert('Failed to join room');
+        window.location.href = '/';
+      }
+    }
+
+    // Toggle ready status
+    async function toggleReady() {
+      isReady = !isReady;
+      
+      try {
+        const response = await fetch('/api/game/ready', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            user: currentUser, 
+            code: roomCode, 
+            ready: isReady 
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.ok) {
+          document.getElementById('readyBtn').textContent = isReady ? '✓ Ready' : '○ Not Ready';
+          document.getElementById('readyBtn').className = isReady ? 'btn btn-success' : 'btn btn-secondary';
+          await refresh();
+        }
+      } catch (error) {
+        console.error('Ready error:', error);
+      }
+    }
+
+    // Send chat message
+    async function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      
+      if (!text) return;
+      
+      try {
+        const response = await fetch('/api/chat/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            user: currentUser, 
+            code: roomCode, 
+            text 
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.ok) {
+          input.value = '';
+          await refresh();
+        }
+      } catch (error) {
+        console.error('Send message error:', error);
+      }
+    }
+
+    // Handle enter key in chat input
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        sendMessage();
+      }
+    }
+
+    // Vote for a player
+    async function votePlayer(playerNumber) {
+      try {
+        const response = await fetch('/api/game/vote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            user: currentUser, 
+            code: roomCode, 
+            targetNumber: playerNumber 
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.ok) {
+          await refresh();
+        }
+      } catch (error) {
+        console.error('Vote error:', error);
+      }
+    }
+
+    // Use skill on a player
+    async function useSkill(playerNumber) {
+      // For now, just send a chat message
+      await fetch('/api/chat/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          user: currentUser, 
+          code: roomCode, 
+          text: `🎯 Used skill on Player #${playerNumber}` 
+        })
+      });
+      await refresh();
+    }
+
+    // Refresh room data
+    async function refresh() {
+      try {
+        const url = `/api/chat/fetch?code=${encodeURIComponent(roomCode)}${lastChatTimestamp ? '&since=' + lastChatTimestamp : ''}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.room) {
+          updateRoomDisplay(data.room);
+          updatePlayersDisplay(data.room.players || []);
+          
+          if (data.chat && data.chat.length > 0) {
+            updateChatDisplay(data.chat);
+            lastChatTimestamp = data.chat[data.chat.length - 1].ts;
+          }
+        }
+      } catch (error) {
+        console.error('Refresh error:', error);
+      }
+    }
+
+    // Update room display
+    function updateRoomDisplay(room) {
+      document.getElementById('statusBadge').textContent = room.status || 'waiting';
+      document.getElementById('phaseBadge').textContent = room.phase || '-';
+      
+      // Update info box based on game status
+      const infoBox = document.getElementById('infoBox');
+      if (room.status === 'playing') {
+        infoBox.innerHTML = `<strong>🎮 Game in progress!</strong><br>Phase: ${room.phase} | Day: ${room.day || 0}`;
+        
+        // Show role if assigned
+        const myPlayer = (room.players || []).find(p => p.id === currentUser.id);
+        if (myPlayer && myPlayer.role) {
+          const roleCard = document.getElementById('roleCard');
+          roleCard.style.display = 'block';
+          roleCard.className = 'role-card';
+          roleCard.innerHTML = `
+            <h3>🎭 Your Role</h3>
+            <p style="font-size: 1.3em; margin-top: 10px;">${myPlayer.role.toUpperCase()}</p>
+          `;
+        }
+      } else {
+        infoBox.innerHTML = `<strong>ℹ️ Waiting for players...</strong><br>Click "Ready" when you're ready to start. Minimum 3 players required.`;
+      }
+    }
+
+    // Update players display
+    function updatePlayersDisplay(players) {
+      const container = document.getElementById('playersContainer');
+      
+      if (players.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #999;">No players yet</p>';
+        return;
+      }
+      
+      container.innerHTML = '';
+      
+      players.forEach(player => {
+        const card = document.createElement('div');
+        card.className = 'player-card';
+        if (player.ready) card.classList.add('ready');
+        if (player.isdead) card.classList.add('dead');
+        
+        const isMe = player.id === currentUser.id;
+        
+        card.innerHTML = `
+          <div class="player-number">${player.number}</div>
+          <div class="player-name">
+            ${player.name}${isMe ? ' (You)' : ''}
+            ${player.isdead ? ' 💀' : ''}
+            ${player.ready ? ' ✓' : ''}
+          </div>
+          ${!isMe && !player.isdead ? `
+            <div class="player-actions">
+              <button class="btn btn-danger" onclick="votePlayer(${player.number})">Vote</button>
+              <button class="btn btn-secondary" onclick="useSkill(${player.number})">Skill</button>
+            </div>
+          ` : ''}
+        `;
+        
+        container.appendChild(card);
+      });
+    }
+
+    // Update chat display
+    function updateChatDisplay(messages) {
+      const container = document.getElementById('chatMessages');
+      
+      messages.forEach(msg => {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = msg.system ? 'message system' : 'message';
+        
+        if (msg.system) {
+          msgDiv.innerHTML = `
+            <div class="message-text">${msg.text}</div>
+            <div class="message-time">${new Date(msg.ts).toLocaleTimeString()}</div>
+          `;
+        } else {
+          msgDiv.innerHTML = `
+            <div class="message-user">${msg.userName}</div>
+            <div class="message-text">${msg.text}</div>
+            <div class="message-time">${new Date(msg.ts).toLocaleTimeString()}</div>
+          `;
+        }
+        
+        container.appendChild(msgDiv);
+      });
+      
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // Copy room code to clipboard
+    function copyRoomCode() {
+      navigator.clipboard.writeText(roomCode).then(() => {
+        alert('Room code copied to clipboard!');
+      }).catch(() => {
+        alert(`Room code: ${roomCode}`);
+      });
+    }
+
+    // Initialize and start polling
+    initUser().then(() => {
+      refresh();
+      setInterval(refresh, 2500);
+    });
+  </script>
+</body>
+</html>
