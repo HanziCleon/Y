@@ -19,10 +19,5 @@
       "src": "/(.*)",
       "dest": "/public/$1"
     }
-  ],
-  "env": {
-    "MASTER_BIN_ID": "@master_bin_id",
-    "MASTER_API_KEY": "@master_api_key",
-    "ADMIN_EMAIL": "@admin_email"
-  }
+  ]
 }
