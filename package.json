@@ -1,0 +1,21 @@
+{
+  "name": "werewolf-jsonbin-vercel",
+  "version": "1.0.1",
+  "description": "Werewolf game (Vercel-compatible) - per-room JSONBin storage, polling frontend",
+  "type": "commonjs",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "vercel": "^33.5.0"
+  }
+}
