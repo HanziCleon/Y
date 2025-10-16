@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Werewolf Lobby</title>
+  <style>body{font-family:system-ui, Arial; max-width:900px; margin:24px auto; padding:12px} .card{border:1px solid #ddd;padding:12px;border-radius:8px;margin-bottom:8px}</style>
+</head>
+<body>
+  <h1>Werewolf — Lobby (JSONBin)</h1>
+
+  <div id="auth">
+    <p>Dev Login (email required)</p>
+    <input id="email" placeholder="email" />
+    <input id="name" placeholder="name" />
+    <button id="login">Login</button>
+  </div>
+
+  <div id="me" style="display:none;">
+    <p>Signed in as <span id="me_name"></span> (<span id="me_email"></span>)</p>
+    <input id="room_name" placeholder="room name" />
+    <button id="create">Create Room</button>
+    <button id="refresh">Refresh Rooms</button>
+    <div id="rooms"></div>
+  </div>
+
+<script>
+async function jsonPost(url, body){ const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); return r.json(); }
+async function jsonGet(url){ const r=await fetch(url); return r.json(); }
+
+let me = null;
+document.getElementById('login').onclick = async () => {
+  const email = document.getElementById('email').value;
+  const name = document.getElementById('name').value || email.split('@')[0];
+  if (!email) return alert('email needed');
+  const j = await jsonPost('/api/auth', { email, name });
+  me = j.user;
+  localStorage.setItem('ww_user', JSON.stringify(me));
+  document.getElementById('auth').style.display='none';
+  document.getElementById('me').style.display='block';
+  document.getElementById('me_name').textContent = me.name;
+  document.getElementById('me_email').textContent = me.email;
+  loadRooms();
+};
+
+document.getElementById('create').onclick = async () => {
+  const roomName = document.getElementById('room_name').value;
+  if (!me) return alert('login first');
+  const j = await jsonPost('/api/rooms/create', { user: me, roomName });
+  if (j.code) {
+    window.open('/room.html?code=' + j.code, '_blank');
+    loadRooms();
+  } else alert('error: ' + JSON.stringify(j));
+};
+
+async function loadRooms(){
+  const j = await jsonGet('/api/rooms/list');
+  const container = document.getElementById('rooms');
+  container.innerHTML = '';
+  (j.rooms||[]).forEach(r => {
+    const el = document.createElement('div'); el.className='card';
+    el.innerHTML = `<strong>${r.code}</strong> — owner:${r.owner || ''} — <button data-code="${r.code}">Join</button>`;
+    el.querySelector('button').onclick = async () => {
+      if (!me) return alert('login first'); 
+      const resp = await jsonPost('/api/rooms/join', { user: me, code: r.code });
+      if (resp.ok) window.open('/room.html?code=' + r.code, '_blank');
+      else alert(JSON.stringify(resp));
+    };
+    container.appendChild(el);
+  });
+}
+
+document.getElementById('refresh').onclick = loadRooms;
+
+window.onload = () => {
+  const saved = localStorage.getItem('ww_user');
+  if (saved) {
+    me = JSON.parse(saved);
+    document.getElementById('auth').style.display='none';
+    document.getElementById('me').style.display='block';
+    document.getElementById('me_name').textContent = me.name;
+    document.getElementById('me_email').textContent = me.email;
+    loadRooms();
+  }
+}
+</script>
+</body>
+</html>
