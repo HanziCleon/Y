@@ -1,0 +1,110 @@
+# ========================================
+# VERCEL IGNORE
+# ========================================
+# File dan folder yang tidak perlu di-deploy ke Vercel
+# Ini akan mempercepat deployment dan mengurangi bundle size
+
+# Development Files
+.env
+.env.local
+.env.development
+.env.test
+.env.*.local
+*.local
+
+# Documentation & Guides
+README.md
+MIGRATION_GUIDE.md
+VERCEL_DEPLOYMENT.md
+*.md.backup
+docs/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Replit Specific
+.replit
+replit.nix
+replit.md
+
+# Development Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test Files
+test/
+tests/
+**/__tests__/
+**/*.test.js
+**/*.spec.js
+coverage/
+.nyc_output/
+
+# Build Outputs (jika ada)
+dist/
+build/
+*.tsbuildinfo
+
+# Database Files
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
+*.log
+
+# Attached Assets (screenshots, backups, etc)
+attached_assets/
+
+# Asset Backups
+asset/*.backup
+asset/*.old
+
+# Old/Backup Files
+*.backup
+*.old
+*.bak
+*_backup.*
+*_old.*
+
+# OS Files
+Thumbs.db
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Lock Files (optional, tapi biasanya di-include)
+# Uncomment jika ingin exclude
+# package-lock.json
+# yarn.lock
+
+# Vercel CLI
+.vercel/
+
+# Notes & Planning
+notes.txt
+TODO.txt
+CHANGELOG.md
+
+# Development Server (use api/index.js for serverless)
+server.js
+
+# Scripts (development only)
+scripts/
