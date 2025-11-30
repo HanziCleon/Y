@@ -1,0 +1,84 @@
+# ==========================================
+# Vercel Deployment Ignore File
+# ==========================================
+# Files and directories listed here will NOT be uploaded to Vercel
+# This reduces deployment size and improves cold start performance
+
+# Development files
+.env
+.env.*
+!.env.example
+.replit
+replit.md
+*.md
+!README.md
+
+# Git
+.git/
+.gitignore
+.github/
+
+# Node modules (Vercel installs from package.json)
+node_modules/
+
+# Vercel
+.vercel/
+
+# Local development
+.local/
+.config/
+
+# Documentation (keep only essential)
+MIGRATION_GUIDE.md
+README_DEPLOY_VERCEL.md
+VERCEL_DEPLOYMENT.md
+DEPLOYMENT_CHECKLIST.md
+QUICK_START.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test files
+test/
+tests/
+*.test.js
+*.spec.js
+__tests__/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Build artifacts (if any)
+dist/
+build/
+
+# Workspace files
+*.code-workspace
+
+# Attached assets (if not needed in production)
+# attached_assets/
+
+# Scripts (if not needed in production)
+# scripts/
